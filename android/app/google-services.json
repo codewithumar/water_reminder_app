@@ -31,46 +31,10 @@
               "client_type": 3
             },
             {
-              "client_id": "1007701548500-pdtl7elbft8lcaubbug93aiiqv6hg07n.apps.googleusercontent.com",
+              "client_id": "1007701548500-di81bqf0c6qahut1n03ht0m72cnn27aq.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.waterreminderapp"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:1007701548500:android:ff7854d30dd794eb3d8a41",
-        "android_client_info": {
-          "package_name": "com.example.waterreminderapp"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "1007701548500-554ak86j410dhja317b5ceq3p49rdupn.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyAjOPXhJOzzQX5iQ8tQTyVz9Fsr01ekcaA"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "1007701548500-554ak86j410dhja317b5ceq3p49rdupn.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "1007701548500-pdtl7elbft8lcaubbug93aiiqv6hg07n.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.waterreminderapp"
+                "bundle_id": "com.example.waterReminderApp"
               }
             }
           ]
