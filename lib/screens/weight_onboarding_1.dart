@@ -13,6 +13,11 @@ class _WeightOnBoardingState extends State<WeightOnBoarding> {
   String weight = '';
   final _formkey = GlobalKey<FormState>();
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Form(

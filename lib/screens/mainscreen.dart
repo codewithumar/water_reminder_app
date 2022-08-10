@@ -1,3 +1,4 @@
+// ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     newuser = false;
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome')),
+      // appBar: AppBar(title: const Text('Welcome')),
       body: IndexedStack(
         index: _selectedIndex,
         children: _widgetOptions,
@@ -49,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.red,
+        selectedItemColor: Colors.teal,
         onTap: _onItemTapped,
       ),
     );

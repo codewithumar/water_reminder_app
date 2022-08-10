@@ -38,7 +38,7 @@ class _GenderOnBoardingState extends State<GenderOnBoarding> {
                 leading: Radio<SingingCharacter>(
                     value: SingingCharacter.male,
                     groupValue: gender,
-                    onChanged: (SingingCharacter? value) {
+                    onChanged: (value) {
                       setState(() {
                         gender = value;
                         genderselcted = value.toString();
@@ -50,7 +50,7 @@ class _GenderOnBoardingState extends State<GenderOnBoarding> {
                 leading: Radio<SingingCharacter>(
                     value: SingingCharacter.female,
                     groupValue: gender,
-                    onChanged: (SingingCharacter? value) {
+                    onChanged: (value) {
                       setState(() {
                         gender = value;
                         genderselcted = value.toString();

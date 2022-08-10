@@ -3,8 +3,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:water_reminder_app/models/data.dart';
 import "package:cloud_firestore/cloud_firestore.dart";
 
-import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:water_reminder_app/screens/mainscreen.dart';
 
 class DateTimeOnBoarding extends StatefulWidget {
@@ -22,6 +20,11 @@ class _DateTimeOnBoardingState extends State<DateTimeOnBoarding> {
   TextEditingController waketime = TextEditingController();
   TextEditingController sleeptime = TextEditingController();
   TimeOfDay selectedTime = TimeOfDay.now();
+  @override
+  void initState() {
+    super.initState();
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +114,7 @@ class _DateTimeOnBoardingState extends State<DateTimeOnBoarding> {
   Future createdata(UserData data) async {
     await FirebaseFirestore.instance
         .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .doc('user1')
         .set(data.toMap());
     Fluttertoast.showToast(msg: "Sccuess", toastLength: Toast.LENGTH_LONG);
   }
