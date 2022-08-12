@@ -4,6 +4,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:water_reminder_app/models/data.dart';
 
+enum Stringnames { male, female }
+
 class SettingScreen extends StatefulWidget {
   const SettingScreen({Key? key}) : super(key: key);
 
@@ -18,6 +20,8 @@ class _SettingScreenState extends State<SettingScreen> {
   TextEditingController sleeptimecoltroller = TextEditingController();
   TimeOfDay selectedTime = TimeOfDay.now();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  String? gender = Stringnames.male.name;
+  String genderselcted = Stringnames.male.name;
 
   readUserData() async {
     setState(() {
@@ -65,6 +69,9 @@ class _SettingScreenState extends State<SettingScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(
+                height: 40,
+              ),
               const Text(
                 "Setting",
                 textAlign: TextAlign.center,
@@ -97,9 +104,9 @@ class _SettingScreenState extends State<SettingScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
                             ),
-                            hintText: 'Enter your weight',
-                            label: Text(data.weight.toString(),
-                                style: const TextStyle(color: Colors.teal)),
+                            hintText: data.weight,
+                            // label:const Text('Weight',
+                            //style:  TextStyle(color: Colors.teal)),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(5.0),
                               borderSide: const BorderSide(width: 1.5),
@@ -117,25 +124,36 @@ class _SettingScreenState extends State<SettingScreen> {
                           },
                         ),
                       ),
-                      const SizedBox(
-                        height: 40,
-                      ),
                       const Text(
                         'Gender',
                         textAlign: TextAlign.start,
                         style: TextStyle(fontSize: 15),
                       ),
-                      TextFormField(
-                          initialValue: data.gender,
-                          readOnly: true,
-                          // controller: gendercoltroller,
-                          style: const TextStyle(fontSize: 30),
-                          decoration: InputDecoration(
-                              suffixIcon: IconButton(
-                                  onPressed: () {},
-                                  icon: const Icon(Icons.person)))),
-                      const SizedBox(
-                        height: 40,
+                      ListTile(
+                        title: const Text('Male'),
+                        leading: Radio<String>(
+                            value: Stringnames.male.name,
+                            groupValue: gender,
+                            activeColor: Colors.teal,
+                            onChanged: (value) {
+                              setState(() {
+                                gender = value;
+                                genderselcted = value.toString();
+                              });
+                            }),
+                      ),
+                      ListTile(
+                        title: const Text('Female'),
+                        leading: Radio<String>(
+                            activeColor: Colors.teal,
+                            value: 'female',
+                            groupValue: gender,
+                            onChanged: (value) {
+                              setState(() {
+                                gender = value;
+                                genderselcted = value.toString();
+                              });
+                            }),
                       ),
                       const Text(
                         'WakeUp Time',
@@ -152,11 +170,12 @@ class _SettingScreenState extends State<SettingScreen> {
                           decoration: InputDecoration(
                             isDense: true,
                             enabled: true,
+                            hintText: data.waketime,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
                             ),
-                            label: Text(data.waketime.toString(),
-                                style: const TextStyle(color: Colors.teal)),
+                            // label: //const Text('wakeup time',
+                            //style: TextStyle(color: Colors.teal)),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(5.0),
                               borderSide: const BorderSide(
@@ -182,7 +201,7 @@ class _SettingScreenState extends State<SettingScreen> {
                         ),
                       ),
                       const SizedBox(
-                        height: 40,
+                        height: 10,
                       ),
                       const Text(
                         'Sleep Time',
@@ -199,11 +218,12 @@ class _SettingScreenState extends State<SettingScreen> {
                           decoration: InputDecoration(
                             isDense: true,
                             enabled: true,
+                            hintText: data.sleeptime,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
                             ),
-                            label: Text(data.sleeptime.toString(),
-                                style: const TextStyle(color: Colors.teal)),
+                            // label: const Text('Sleep Time',
+                            //  style: TextStyle(color: Colors.teal)),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(5.0),
                               borderSide: const BorderSide(
@@ -232,12 +252,15 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                 ),
               ),
+              const SizedBox(
+                height: 40,
+              ),
               MaterialButton(
                 height: 58,
                 minWidth: 340,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     final doc = FirebaseFirestore.instance
                         .collection('users')
@@ -246,9 +269,12 @@ class _SettingScreenState extends State<SettingScreen> {
                     doc.update({
                       'weight': weightcoltroller.text,
                       'sleeptime': sleeptimecoltroller.text,
-                      'waketime': waketimecoltroller.text
+                      'waketime': waketimecoltroller.text,
+                      'gender': genderselcted,
+                    }).then((value) {
+                      Fluttertoast.showToast(msg: "Sueess");
                     });
-                    Fluttertoast.showToast(msg: "Sueess");
+
                     setState(() {});
                   }
                 },
@@ -290,7 +316,7 @@ class _SettingScreenState extends State<SettingScreen> {
 
   _showTimePicker() {
     return showTimePicker(
-      initialEntryMode: TimePickerEntryMode.input,
+      initialEntryMode: TimePickerEntryMode.dial,
       context: context,
       initialTime: TimeOfDay.now(),
       builder: (context, child) {

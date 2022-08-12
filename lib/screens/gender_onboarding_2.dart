@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:water_reminder_app/screens/datetime_onboarding3.dart';
 
-enum SingingCharacter { male, female }
+enum Stringnames { male, female }
 
 class GenderOnBoarding extends StatefulWidget {
   final String weight;
@@ -13,8 +13,8 @@ class GenderOnBoarding extends StatefulWidget {
 }
 
 class _GenderOnBoardingState extends State<GenderOnBoarding> {
-  SingingCharacter? gender = SingingCharacter.male;
-  String genderselcted = SingingCharacter.male.toString();
+  String? gender = Stringnames.male.name;
+  String genderselcted = Stringnames.male.name;
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +35,8 @@ class _GenderOnBoardingState extends State<GenderOnBoarding> {
               ),
               ListTile(
                 title: const Text('Male'),
-                leading: Radio<SingingCharacter>(
-                    value: SingingCharacter.male,
+                leading: Radio<String>(
+                    value: 'Male',
                     groupValue: gender,
                     onChanged: (value) {
                       setState(() {
@@ -47,8 +47,8 @@ class _GenderOnBoardingState extends State<GenderOnBoarding> {
               ),
               ListTile(
                 title: const Text('Female'),
-                leading: Radio<SingingCharacter>(
-                    value: SingingCharacter.female,
+                leading: Radio<String>(
+                    value: 'Female',
                     groupValue: gender,
                     onChanged: (value) {
                       setState(() {

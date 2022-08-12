@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:water_reminder_app/main.dart';
 import 'package:water_reminder_app/screens/home.dart';
 import 'package:water_reminder_app/screens/setting.dart';
 
@@ -29,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    newuser = false;
     return Scaffold(
       // appBar: AppBar(title: const Text('Welcome')),
       body: IndexedStack(
