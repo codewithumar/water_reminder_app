@@ -4,11 +4,12 @@ class UserData {
   String waketime;
   String sleeptime;
 
-  UserData(
-      {required this.weight,
-      required this.gender,
-      required this.sleeptime,
-      required this.waketime});
+  UserData({
+    required this.weight,
+    required this.gender,
+    required this.sleeptime,
+    required this.waketime,
+  });
 
   Map<String, dynamic> toMap() {
     return {

@@ -6,6 +6,8 @@ import 'package:water_reminder_app/models/data.dart';
 
 enum Stringnames { male, female }
 
+String weight = '80';
+
 class SettingScreen extends StatefulWidget {
   const SettingScreen({Key? key}) : super(key: key);
 
@@ -53,29 +55,38 @@ class _SettingScreenState extends State<SettingScreen> {
                 return const Center(child: Text("Error in loading "));
               } else if (snapshot.hasData) {
                 final users = snapshot.data;
+                weight = snapshot.data!.single.weight;
                 return ListView(
                   children: users!.map(builduserdata).toList(),
                 );
               }
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                  child: CircularProgressIndicator(
+                strokeWidth: 2.0,
+              ));
             }));
   }
 
   Widget builduserdata(UserData data) => Container(
-        margin: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.all(10.0),
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(
-                height: 40,
-              ),
               const Text(
                 "Setting",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
+                style: TextStyle(
+                    color: Colors.teal,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 40),
+              ),
+              const Divider(
+                height: 5,
+                thickness: 1,
+                color: Colors.teal,
               ),
               Card(
                 elevation: 2.0,
@@ -261,31 +272,31 @@ class _SettingScreenState extends State<SettingScreen> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    final doc = FirebaseFirestore.instance
-                        .collection('users')
-                        .doc('user1');
+                  // if (_formKey.currentState!.validate()) {
+                  final doc = FirebaseFirestore.instance
+                      .collection('users')
+                      .doc('user1');
 
-                    doc.update({
-                      'weight': weightcoltroller.text,
-                      'sleeptime': sleeptimecoltroller.text,
-                      'waketime': waketimecoltroller.text,
-                      'gender': genderselcted,
-                    }).then((value) {
-                      Fluttertoast.showToast(msg: "Sueess");
-                    });
+                  doc.update({
+                    'weight': weightcoltroller.text,
+                    'sleeptime': sleeptimecoltroller.text,
+                    'waketime': waketimecoltroller.text,
+                    'gender': genderselcted,
+                  }).then((value) {
+                    Fluttertoast.showToast(msg: "Sueess");
+                  });
 
-                    setState(() {});
-                  }
+                  setState(() {});
+                  // }
                 },
+                color: Colors.teal,
                 child: const Text(
                   'Save',
                   style: TextStyle(
                     fontSize: 24,
-                    color: Colors.black,
+                    color: (Colors.white),
                   ),
                 ),
-                color: (Colors.teal),
               ),
             ],
           ),
@@ -355,62 +366,10 @@ class _SettingScreenState extends State<SettingScreen> {
     }
   }
 
-  Future<void> updateWeight(UserData data) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(data.weight),
-          content: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  child: TextFormField(
-                    keyboardType: TextInputType.emailAddress,
-                    controller: weightcoltroller,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Weight',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-                child: const Text('Update'),
-                onPressed: () {
-                  {
-                    final doc = FirebaseFirestore.instance
-                        .collection('users')
-                        .doc('user1');
-
-                    doc.update({
-                      'weight': weightcoltroller.text,
-                    });
-                    setState(() {});
-                    Navigator.of(context).pop();
-                  }
-                }),
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+  Stream<List<UserData>> readusers() =>
+      FirebaseFirestore.instance.collection('users').snapshots().map(
+            (snapshot) => snapshot.docs
+                .map((doc) => UserData.fromuserdata(doc.data()))
+                .toList(),
+          );
 }
-
-Stream<List<UserData>> readusers() =>
-    FirebaseFirestore.instance.collection('users').snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => UserData.fromuserdata(doc.data()))
-              .toList(),
-        );

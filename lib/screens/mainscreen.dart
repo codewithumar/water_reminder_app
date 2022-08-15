@@ -7,7 +7,6 @@ import 'package:water_reminder_app/screens/setting.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -20,6 +19,7 @@ Future<void> getinfo() async {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -29,7 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(title: const Text('Welcome')),
       body: IndexedStack(
         index: _selectedIndex,
         children: _widgetOptions,
@@ -54,9 +53,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  static const List<Widget> _widgetOptions = <Widget>[
-    Home(),
-    SettingScreen(),
+  static final List<Widget> _widgetOptions = <Widget>[
+    const Home(),
+    const SettingScreen(),
   ];
   void _onItemTapped(int index) {
     setState(() {

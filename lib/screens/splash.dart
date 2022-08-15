@@ -32,16 +32,26 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: Colors.teal,
       body: Center(
-        child: Text(
-          'Water Reminder App',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 40,
-          ),
-        ),
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: const [
+              Center(
+                child: Image(
+                  image: AssetImage('images/watericon.png'),
+                ),
+              ),
+              Text(
+                'Water Reminder App',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 40,
+                ),
+              ),
+            ]),
       ),
     );
   }
