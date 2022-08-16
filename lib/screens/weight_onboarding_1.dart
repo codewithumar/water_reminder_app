@@ -69,13 +69,14 @@ class _WeightOnBoardingState extends State<WeightOnBoarding> {
                       ),
                     ),
                     onPressed: () {
-                      weight = weightcontroller.text.toString();
                       if (_formkey.currentState!.validate()) {
                         Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                                builder: (contaxt) =>
-                                    GenderOnBoarding(weight: weight)),
+                              builder: (contaxt) => GenderOnBoarding(
+                                weight: weightcontroller.text,
+                              ),
+                            ),
                             (route) => false);
                       }
                     },

@@ -3,10 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:water_reminder_app/models/data.dart';
+import 'package:water_reminder_app/screens/reminder.dart';
 
 enum Stringnames { male, female }
-
-String weight = '80';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({Key? key}) : super(key: key);
@@ -20,6 +19,7 @@ class _SettingScreenState extends State<SettingScreen> {
   TextEditingController gendercoltroller = TextEditingController();
   TextEditingController waketimecoltroller = TextEditingController();
   TextEditingController sleeptimecoltroller = TextEditingController();
+  TextEditingController waterintakecoltroller = TextEditingController();
   TimeOfDay selectedTime = TimeOfDay.now();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String? gender = Stringnames.male.name;
@@ -55,7 +55,6 @@ class _SettingScreenState extends State<SettingScreen> {
                 return const Center(child: Text("Error in loading "));
               } else if (snapshot.hasData) {
                 final users = snapshot.data;
-                weight = snapshot.data!.single.weight;
                 return ListView(
                   children: users!.map(builduserdata).toList(),
                 );
@@ -233,8 +232,6 @@ class _SettingScreenState extends State<SettingScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
                             ),
-                            // label: const Text('Sleep Time',
-                            //  style: TextStyle(color: Colors.teal)),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(5.0),
                               borderSide: const BorderSide(
@@ -259,6 +256,54 @@ class _SettingScreenState extends State<SettingScreen> {
                           },
                         ),
                       ),
+                      const Text(
+                        'Water Goal',
+                        textAlign: TextAlign.start,
+                        style: TextStyle(fontSize: 15),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20.0, vertical: 10.0),
+                        child: TextFormField(
+                          keyboardType: TextInputType.number,
+                          cursorColor: Colors.teal,
+                          style: const TextStyle(color: Colors.teal),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            enabled: true,
+                            hintText: data.waterintake,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(5.0),
+                              borderSide: const BorderSide(
+                                  color: Colors.teal, width: 1.5),
+                            ),
+                            prefixText: '  ',
+                          ),
+                          controller: waterintakecoltroller,
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              return 'Select bed time';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ReminderScreen()),
+                                (route) => true);
+                          },
+                          child: const Text(
+                            'Reminder Schedule',
+                            style: TextStyle(
+                                color: Color.fromARGB(255, 117, 203, 212)),
+                          )),
                     ],
                   ),
                 ),
@@ -272,7 +317,6 @@ class _SettingScreenState extends State<SettingScreen> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 onPressed: () async {
-                  // if (_formKey.currentState!.validate()) {
                   final doc = FirebaseFirestore.instance
                       .collection('users')
                       .doc('user1');
@@ -282,12 +326,12 @@ class _SettingScreenState extends State<SettingScreen> {
                     'sleeptime': sleeptimecoltroller.text,
                     'waketime': waketimecoltroller.text,
                     'gender': genderselcted,
+                    'waterintake': waterintakecoltroller.text
                   }).then((value) {
                     Fluttertoast.showToast(msg: "Sueess");
                   });
 
                   setState(() {});
-                  // }
                 },
                 color: Colors.teal,
                 child: const Text(

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -7,7 +9,8 @@ import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 
 import 'package:water_reminder_app/models/reminder.dart';
-import 'package:water_reminder_app/screens/setting.dart';
+
+import '../models/data.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -16,14 +19,16 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  DateTime _dateTime = DateTime.now();
   @override
   void initState() {
-    weight;
-    setState(() {});
+    _HomeState();
     super.initState();
+    setState(() {});
   }
 
-  DateTime _dateTime = DateTime.now();
+  double lavel = 0.0;
+  int intakelvl = 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,18 +82,19 @@ class _HomeState extends State<Home> {
                         child: RotatedBox(
                           quarterTurns: -1,
                           child: LinearPercentIndicator(
-                              percent: 0.7,
-                              lineHeight: 60,
-                              backgroundColor:
-                                  const Color.fromARGB(255, 224, 247, 253),
-                              linearGradient: const LinearGradient(
-                                colors: <Color>[
-                                  Color.fromARGB(255, 13, 77, 98),
-                                  Color.fromARGB(255, 20, 141, 155),
-                                  Color.fromARGB(255, 64, 175, 187),
-                                  Color.fromARGB(255, 117, 203, 212),
-                                ],
-                              )),
+                            percent: lavel,
+                            lineHeight: 60,
+                            backgroundColor:
+                                const Color.fromARGB(255, 224, 247, 253),
+                            linearGradient: const LinearGradient(
+                              colors: <Color>[
+                                Color.fromARGB(255, 13, 77, 98),
+                                Color.fromARGB(255, 20, 141, 155),
+                                Color.fromARGB(255, 64, 175, 187),
+                                Color.fromARGB(255, 117, 203, 212),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(
@@ -96,31 +102,53 @@ class _HomeState extends State<Home> {
                       ),
                       Column(
                         children: [
-                          Row(children: [
-                            const Text(
-                              "000",
-                              style: TextStyle(
-                                  fontSize: 30,
-                                  color: Color.fromARGB(255, 83, 207, 220)),
-                            ),
-                            const Text(
-                              "/",
-                              style:
-                                  TextStyle(fontSize: 30, color: Colors.black),
-                            ),
-                            Text(
-                              '${((int.parse(weight) * 0.0333) * 1000).round()}',
-                              style: const TextStyle(
-                                  fontSize: 30, color: Colors.black),
-                            ),
-                            const Text(
-                              "ml",
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ]),
+                          Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text(
+                                  intakelvl.toString(),
+                                  style: const TextStyle(
+                                      fontSize: 30,
+                                      color: Color.fromARGB(255, 83, 207, 220)),
+                                ),
+                                const Text(
+                                  "/",
+                                  style: TextStyle(
+                                      fontSize: 30, color: Colors.black),
+                                ),
+                                StreamBuilder<List<UserData>>(
+                                  stream: readusers(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasError) {
+                                      return const Text("Error");
+                                    } else if (snapshot.data == null) {
+                                      const Text("Error");
+                                    } else if (snapshot.hasData) {
+                                      final users = snapshot.data;
+                                      return SizedBox(
+                                        height: 20,
+                                        width: 40,
+                                        child: ListView(
+                                          children: users!
+                                              .map(builduserdata)
+                                              .toList(),
+                                        ),
+                                      );
+                                    }
+                                    return const Center(
+                                      child: Center(child: Text('outer ')),
+                                    );
+                                  },
+                                ),
+                                const Text(
+                                  "ml",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ]),
                           const Text(
                             'You have completed 30%\nof Daily Target',
                             maxLines: 2,
@@ -130,11 +158,20 @@ class _HomeState extends State<Home> {
                               onPressed: () {
                                 builddialoag(context, child: buildDatePicker(),
                                     onclicked: () {
-                                  final data = Reminder(
-                                      watergoal: DateFormat('kk-mm a')
-                                          .format(_dateTime)
-                                          .toString());
-                                  createdata(data);
+                                  final update = intakelvl / 1000;
+                                  setState(() {
+                                    final data = Reminder(
+                                        watergoal: DateFormat('kk-mm a')
+                                            .format(_dateTime)
+                                            .toString());
+                                    createdata(data);
+                                    if (update <= 1.0) {
+                                      this.lavel = update;
+                                      intakelvl += 250;
+                                    } else {
+                                      Fluttertoast.showToast(msg: 'Full');
+                                    }
+                                  });
                                   Navigator.pop(context);
                                 });
                               },
@@ -162,6 +199,9 @@ class _HomeState extends State<Home> {
                     child: const Text("Today’s records"),
                   ),
                 ),
+                const SizedBox(
+                  height: 5,
+                ),
                 StreamBuilder(
                   stream: FirebaseFirestore.instance
                       .collection('users')
@@ -171,8 +211,11 @@ class _HomeState extends State<Home> {
                   builder: (context,
                       AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
                           snapshot) {
-                    if (snapshot.hasError || snapshot.data == null) {
-                      return const Center(child: Text("Error in loading "));
+                    if (snapshot.hasError ||
+                        snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: Text("No Data"),
+                      );
                     } else if (snapshot.hasData) {
                       return ListView.builder(
                         scrollDirection: Axis.vertical,
@@ -180,6 +223,7 @@ class _HomeState extends State<Home> {
                         shrinkWrap: true,
                         itemCount: snapshot.data!.docs.length,
                         itemBuilder: (context, index) {
+                          DocumentSnapshot ds = snapshot.data!.docs[index];
                           String watergoaltime = snapshot.data!.docs
                               .elementAt(index)
                               .get('watergoal');
@@ -205,35 +249,33 @@ class _HomeState extends State<Home> {
                                   const SizedBox(
                                     width: 10,
                                   ),
-                                  // IconButton(
-                                  //   icon: const Icon(Icons.more_vert),
-                                  //   onPressed: getPopUp(context),
-                                  // ),
                                   PopupMenuButton(
-                                      itemBuilder: (BuildContext context) => [
-                                            PopupMenuItem(
-                                              child: TextButton(
-                                                  onPressed: () {
-                                                    final doc = FirebaseFirestore
-                                                        .instance
-                                                        .collection('users')
-                                                        .doc('user1')
-                                                        .collection(DateFormat(
-                                                                'yyyy-MM-dd')
-                                                            .format(_dateTime))
-                                                        .doc(DateFormat('kk-mm')
-                                                            .format(_dateTime));
-                                                    doc.delete();
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                  child: const Text('Delete')),
-                                            ),
-                                            const PopupMenuItem(
-                                              child: TextButton(
-                                                  onPressed: null,
-                                                  child: Text('Edit')),
-                                            )
-                                          ])
+                                    itemBuilder: (BuildContext context) => [
+                                      PopupMenuItem(
+                                        child: TextButton(
+                                          onPressed: () {
+                                            _delete(ds.id);
+                                            setState(
+                                              () {
+                                                //this.lavel =lavel - (intakelvl / 1000);
+                                                intakelvl -= 250;
+                                                if (intakelvl < 0) {
+                                                  intakelvl = 0;
+                                                }
+                                              },
+                                            );
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: const Text('Delete'),
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        child: TextButton(
+                                            onPressed: null,
+                                            child: Text('Edit')),
+                                      )
+                                    ],
+                                  )
                                 ],
                               ),
                             ),
@@ -244,6 +286,7 @@ class _HomeState extends State<Home> {
                     return const Center(
                       child: CircularProgressIndicator(
                         strokeWidth: 2.0,
+                        semanticsLabel: 'Loading',
                       ),
                     );
                   },
@@ -256,6 +299,34 @@ class _HomeState extends State<Home> {
     );
   }
 
+  Future<void> _delete(String docid) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc('user1')
+        .collection(
+          DateFormat('yyyy-MM-dd').format(_dateTime),
+        )
+        .doc(docid)
+        .delete();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Deleted...!'),
+      ),
+    );
+  }
+
+  Widget builduserdata(UserData data) => Text(
+        data.waterintake,
+        style: const TextStyle(color: Colors.black, fontSize: 20),
+      );
+
+  Stream<List<UserData>> readusers() =>
+      FirebaseFirestore.instance.collection('users').snapshots().map(
+            (snapshot) => snapshot.docs
+                .map((doc) => UserData.fromuserdata(doc.data()))
+                .toList(),
+          );
   Future<void> createdata(Reminder data) async {
     await FirebaseFirestore.instance
         .collection('users')
@@ -266,6 +337,7 @@ class _HomeState extends State<Home> {
         .then((value) {
       Fluttertoast.showToast(msg: "Sccuess");
     });
+    setState(() {});
   }
 
   void builddialoag(BuildContext context,
@@ -288,9 +360,7 @@ class _HomeState extends State<Home> {
             maximumYear: DateTime.now().year,
             mode: CupertinoDatePickerMode.time,
             onDateTimeChanged: (dateTime) {
-              setState(() {
-                _dateTime = dateTime;
-              });
+              _dateTime = dateTime;
             }),
       );
 }

@@ -20,6 +20,7 @@ class _DateTimeOnBoardingState extends State<DateTimeOnBoarding> {
   TextEditingController waketime = TextEditingController();
   TextEditingController sleeptime = TextEditingController();
   TimeOfDay selectedTime = TimeOfDay.now();
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +29,7 @@ class _DateTimeOnBoardingState extends State<DateTimeOnBoarding> {
 
   @override
   Widget build(BuildContext context) {
+    double waterintake = (int.parse(widget.weight) * 0.033 * 1000);
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -91,11 +93,11 @@ class _DateTimeOnBoardingState extends State<DateTimeOnBoarding> {
                   ),
                   onPressed: () {
                     final data = UserData(
-                      weight: widget.weight,
-                      gender: widget.gender,
-                      waketime: waketime.text,
-                      sleeptime: sleeptime.text,
-                    );
+                        weight: widget.weight,
+                        gender: widget.gender,
+                        waketime: waketime.text,
+                        sleeptime: sleeptime.text,
+                        waterintake: waterintake.toString());
                     createdata(data);
                     Navigator.pushAndRemoveUntil(
                         context,
