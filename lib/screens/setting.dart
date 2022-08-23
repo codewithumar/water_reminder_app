@@ -115,8 +115,8 @@ class _SettingScreenState extends State<SettingScreen> {
                               borderRadius: BorderRadius.circular(10.0),
                             ),
                             hintText: data.weight,
-                            // label:const Text('Weight',
-                            //style:  TextStyle(color: Colors.teal)),
+                            label: const Text('Weight',
+                                style: TextStyle(color: Colors.teal)),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(5.0),
                               borderSide: const BorderSide(width: 1.5),

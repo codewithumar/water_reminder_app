@@ -29,11 +29,4 @@ class UserData {
       waketime: json['waketime'],
       sleeptime: json['sleeptime'],
       waterintake: json['waterintake']);
-
-  static UserData getweight(Map<String, dynamic> json) => UserData(
-      weight: json['weight'],
-      gender: json['gender'],
-      waketime: json['waketime'],
-      sleeptime: json['sleeptime'],
-      waterintake: json['waterintake']);
 }

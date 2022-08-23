@@ -1,5 +1,8 @@
+//import 'dart:developer';
+
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -18,19 +21,26 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
+String waterintakegoal = '1';
+
 class _HomeState extends State<Home> {
   DateTime _dateTime = DateTime.now();
-  @override
-  void initState() {
-    _HomeState();
-    super.initState();
-    setState(() {});
-  }
 
   double lavel = 0.0;
   int intakelvl = 0;
+
+  @override
+  void initState() {
+    getintake();
+    //getlavelindicator();
+    lavel = lavel / int.parse(waterintakegoal);
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    double indicatorlavel = lavel;
+    //log("indiocatorlavel:${indicatorlavel.toString()}");
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -82,7 +92,7 @@ class _HomeState extends State<Home> {
                         child: RotatedBox(
                           quarterTurns: -1,
                           child: LinearPercentIndicator(
-                            percent: lavel,
+                            percent: indicatorlavel,
                             lineHeight: 60,
                             backgroundColor:
                                 const Color.fromARGB(255, 224, 247, 253),
@@ -126,9 +136,10 @@ class _HomeState extends State<Home> {
                                       const Text("Error");
                                     } else if (snapshot.hasData) {
                                       final users = snapshot.data;
+
                                       return SizedBox(
                                         height: 20,
-                                        width: 40,
+                                        width: 65,
                                         child: ListView(
                                           children: users!
                                               .map(builduserdata)
@@ -156,24 +167,60 @@ class _HomeState extends State<Home> {
                           ),
                           ElevatedButton.icon(
                               onPressed: () {
-                                builddialoag(context, child: buildDatePicker(),
-                                    onclicked: () {
-                                  final update = intakelvl / 1000;
-                                  setState(() {
-                                    final data = Reminder(
-                                        watergoal: DateFormat('kk-mm a')
-                                            .format(_dateTime)
-                                            .toString());
-                                    createdata(data);
-                                    if (update <= 1.0) {
-                                      this.lavel = update;
-                                      intakelvl += 250;
-                                    } else {
-                                      Fluttertoast.showToast(msg: 'Full');
-                                    }
-                                  });
-                                  Navigator.pop(context);
-                                });
+                                builddialoag(
+                                  context,
+                                  child: buildDatePicker(),
+                                  onclicked: () {
+                                    setState(
+                                      () {
+                                        if (lavel >= 0 && lavel <= 1) {
+                                          if (intakelvl == 0) {
+                                            lavel = 250 /
+                                                int.parse(waterintakegoal);
+                                            intakelvl += 250;
+                                            if (kDebugMode) {
+                                              log("lavel : $lavel");
+                                              log("intakelvl : $intakelvl");
+                                              log("intakelvl : $waterintakegoal");
+                                            }
+                                            final data = Reminder(
+                                              watergoal: DateFormat('kk-mm a')
+                                                  .format(_dateTime)
+                                                  .toString(),
+                                              lavelindicator: lavel,
+                                            );
+                                            createdata(data);
+                                          } else if (lavel <= 1.0 &&
+                                              intakelvl > 0) {
+                                            intakelvl += 250;
+                                            lavel = intakelvl /
+                                                int.parse(waterintakegoal);
+                                            if (lavel > 1.0) {
+                                              return;
+                                            }
+                                            if (kDebugMode) {
+                                              log("lavel : $lavel");
+                                              log("intakelvl : $intakelvl");
+                                            }
+                                          } else if (lavel > 1.0) {
+                                            if (kDebugMode) {
+                                              log("lavel : $lavel");
+                                              log("intakelvl : $intakelvl");
+                                            }
+                                            snackbar('Goal Achived', context);
+                                          }
+                                        } else {
+                                          snackbar('Goal Achived', context);
+                                        }
+                                      },
+                                    );
+                                    Navigator.pop(context);
+                                  },
+                                );
+                                FirebaseFirestore.instance
+                                    .collection('lavel')
+                                    .doc('waterlavel')
+                                    .set({'lavel': lavel});
                               },
                               icon: const Image(
                                 image: AssetImage('images/glass.png'),
@@ -253,29 +300,35 @@ class _HomeState extends State<Home> {
                                     itemBuilder: (BuildContext context) => [
                                       PopupMenuItem(
                                         child: TextButton(
-                                          onPressed: () {
+                                          onPressed: () async {
                                             _delete(ds.id);
                                             setState(
                                               () {
-                                                //this.lavel =lavel - (intakelvl / 1000);
-                                                intakelvl -= 250;
-                                                if (intakelvl < 0) {
-                                                  intakelvl = 0;
+                                                if (lavel < 0.0) {
+                                                  lavel = 0.0;
+                                                  if (intakelvl <= 0) {
+                                                    intakelvl = 0;
+                                                  } else {
+                                                    intakelvl -= 250;
+                                                  }
+                                                } else {
+                                                  if (intakelvl <= 0) {
+                                                    intakelvl = 0;
+                                                    lavel = lavel -
+                                                        (intakelvl / 1000);
+                                                  } else {
+                                                    intakelvl -= 250;
+                                                  }
                                                 }
                                               },
                                             );
-                                            Navigator.of(context).pop();
+                                            //Navigator.of(context).pop();
                                           },
                                           child: const Text('Delete'),
                                         ),
                                       ),
-                                      const PopupMenuItem(
-                                        child: TextButton(
-                                            onPressed: null,
-                                            child: Text('Edit')),
-                                      )
                                     ],
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
@@ -314,6 +367,7 @@ class _HomeState extends State<Home> {
         content: Text('Deleted...!'),
       ),
     );
+    Navigator.of(context).pop();
   }
 
   Widget builduserdata(UserData data) => Text(
@@ -337,7 +391,6 @@ class _HomeState extends State<Home> {
         .then((value) {
       Fluttertoast.showToast(msg: "Sccuess");
     });
-    setState(() {});
   }
 
   void builddialoag(BuildContext context,
@@ -355,12 +408,63 @@ class _HomeState extends State<Home> {
   Widget buildDatePicker() => SizedBox(
         height: 300,
         child: CupertinoDatePicker(
-            initialDateTime: _dateTime,
-            minimumYear: 2000,
-            maximumYear: DateTime.now().year,
-            mode: CupertinoDatePickerMode.time,
-            onDateTimeChanged: (dateTime) {
-              _dateTime = dateTime;
-            }),
+          initialDateTime: _dateTime,
+          minimumYear: 2000,
+          maximumYear: DateTime.now().year,
+          mode: CupertinoDatePickerMode.time,
+          onDateTimeChanged: (dateTime) {
+            _dateTime = dateTime;
+          },
+        ),
       );
+
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> snackbar(
+      String msg, BuildContext context) {
+    return ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: const Color.fromARGB(255, 104, 176, 200),
+        content: Text(
+          msg,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+          textScaleFactor: 1,
+        ),
+      ),
+    );
+  }
+
+  String getintake() {
+    CollectionReference collectionReference =
+        FirebaseFirestore.instance.collection('users');
+    collectionReference.doc('user1').get().then(
+      (value) {
+        waterintakegoal = (value)['waterintake'];
+        setState(
+          () {},
+        );
+      },
+    );
+    return waterintakegoal;
+  }
+
+  // double getlavelindicator() {
+  //   CollectionReference collectionReference = FirebaseFirestore.instance
+  //       .collection('users')
+  //       .doc('user1')
+  //       .collection(DateFormat('yyyy-MM-dd').format(_dateTime));
+  //   collectionReference.doc(DateFormat('kk-mm').format(_dateTime)).get().then(
+  //     (value) {
+  //       setState(
+  //         () {
+  //           lavel = (value)['lavelindicator'];
+  //           log("lavel from db:${lavel.toString()}");
+  //         },
+  //       );
+  //     },
+  //   );
+  //   return lavel;
+  // }
 }
