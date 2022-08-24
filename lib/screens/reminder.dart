@@ -7,12 +7,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:timezone/data/latest_all.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
-import 'package:flutter_native_timezone/flutter_native_timezone.dart';
-import 'package:water_reminder_app/Notifications/notification.dart';
 
-import '../models/data.dart';
+import 'package:water_reminder_app/Services/notification_services.dart';
+
+import '../models/userdata.dart';
 
 final _notifications = FlutterLocalNotificationsPlugin();
 final onNotifications = BehaviorSubject<String?>();
@@ -25,12 +23,15 @@ class ReminderScreen extends StatefulWidget {
 }
 
 class _ReminderScreenState extends State<ReminderScreen> {
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   int intake = 0;
   DateTime _selectedDateTime = DateTime.now();
   LocalNotificationService notificationService = LocalNotificationService();
   List<TimeOfDay> reminder = [];
   List<bool> switchValue = [];
   TimeOfDay setTime = TimeOfDay.now();
+  DateTime currentdate = DateTime.now();
 
   @override
   void initState() {
@@ -91,6 +92,21 @@ class _ReminderScreenState extends State<ReminderScreen> {
                                 setState(() {
                                   switchValue[index] = value;
                                 });
+                                if (value == false) {
+                                  flutterLocalNotificationsPlugin.cancel(
+                                      int.parse(
+                                          "${setTime.hour}${setTime.minute}"));
+                                }
+                                if (value == true) {
+                                  LocalNotificationService
+                                      .showScheduledNotification(
+                                    title: 'Water is life',
+                                    body: 'Don\'t forget to drink water',
+                                    payload: '',
+                                    scheduledDate:
+                                        DateTime(setTime.hour, setTime.minute),
+                                  );
+                                }
                                 FirebaseFirestore.instance
                                     .collection('waterschedule')
                                     .doc('togglevalues')
@@ -101,10 +117,43 @@ class _ReminderScreenState extends State<ReminderScreen> {
                         ),
                         IconButton(
                           onPressed: () {
-                            _deleteTime(index);
-                            setState(() {});
+                            showDialog(
+                              context: context,
+                              builder: (con) => AlertDialog(
+                                title:
+                                    const Text("Delete Water Intake Reminder!"),
+                                content: const Text(
+                                    "Are you sure you want to delete this Intake Reminder?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      _deleteTime(index);
+                                      setState(() {});
+                                      Navigator.pop(context, true);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(14),
+                                      child: const Text(
+                                        "Delete",
+                                      ),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context, true);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(14),
+                                      child: const Text(
+                                        "Cancel",
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
                           },
-                          icon: const Icon(Icons.close),
+                          icon: const Icon(Icons.delete),
                         ),
                       ],
                     ),

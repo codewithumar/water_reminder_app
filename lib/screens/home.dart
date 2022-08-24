@@ -12,8 +12,9 @@ import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 
 import 'package:water_reminder_app/models/reminder.dart';
+import 'package:water_reminder_app/models/waterlevel.dart';
 
-import '../models/data.dart';
+import '../models/userdata.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -25,25 +26,44 @@ String waterintakegoal = '1';
 
 class _HomeState extends State<Home> {
   DateTime _dateTime = DateTime.now();
+  DateTime _updateteddate = DateTime.now();
 
-  double lavel = 0.0;
+  double level = 0.0;
   int intakelvl = 0;
+  double percent = 0;
+
+  Future<void> getintake() async {
+    CollectionReference collectionReference =
+        FirebaseFirestore.instance.collection('users');
+    collectionReference.doc('user1').get().then(
+      (value) {
+        setState(
+          () {
+            waterintakegoal = (value)['waterintake'];
+            log('water goal $waterintakegoal');
+          },
+        );
+      },
+    );
+  }
+
+  void updatedallvalues() {
+    setState(() {
+      getintake();
+    });
+  }
 
   @override
   void initState() {
-    getintake();
-    //getlavelindicator();
-    lavel = lavel / int.parse(waterintakegoal);
     super.initState();
+    updatedallvalues();
   }
 
   @override
   Widget build(BuildContext context) {
-    double indicatorlavel = lavel;
-    //log("indiocatorlavel:${indicatorlavel.toString()}");
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
+      body: SingleChildScrollView(
+        child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(10.0),
             child: Column(
@@ -92,15 +112,19 @@ class _HomeState extends State<Home> {
                         child: RotatedBox(
                           quarterTurns: -1,
                           child: LinearPercentIndicator(
-                            percent: indicatorlavel,
+                            percent: percent,
                             lineHeight: 60,
                             backgroundColor:
                                 const Color.fromARGB(255, 224, 247, 253),
                             linearGradient: const LinearGradient(
                               colors: <Color>[
                                 Color.fromARGB(255, 13, 77, 98),
+                                Color.fromARGB(255, 13, 77, 98),
+                                Color.fromARGB(255, 13, 77, 98),
                                 Color.fromARGB(255, 20, 141, 155),
                                 Color.fromARGB(255, 64, 175, 187),
+                                Color.fromARGB(255, 64, 175, 187),
+                                Color.fromARGB(255, 117, 203, 212),
                                 Color.fromARGB(255, 117, 203, 212),
                               ],
                             ),
@@ -116,19 +140,43 @@ class _HomeState extends State<Home> {
                               mainAxisSize: MainAxisSize.max,
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                Text(
-                                  intakelvl.toString(),
-                                  style: const TextStyle(
-                                      fontSize: 30,
-                                      color: Color.fromARGB(255, 83, 207, 220)),
+                                StreamBuilder<WaterLevel>(
+                                  stream: readwaterintakelavel(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasError) {
+                                      //log(snapshot.error.toString());
+                                      return const Text("Error");
+                                    } else if (snapshot.data == null) {
+                                      const Text("null");
+                                    } else if (snapshot.hasData) {
+                                      final data = snapshot.data;
+                                      if (data == null) return const SizedBox();
+                                      return SizedBox(
+                                        height: 20,
+                                        width: 65,
+                                        child: Text(
+                                          '${data.waterlavel}',
+                                          style: const TextStyle(fontSize: 20),
+                                        ),
+                                      );
+                                    }
+                                    return const CircularProgressIndicator();
+                                  },
                                 ),
                                 const Text(
                                   "/",
                                   style: TextStyle(
                                       fontSize: 30, color: Colors.black),
                                 ),
-                                StreamBuilder<List<UserData>>(
-                                  stream: readusers(),
+                                StreamBuilder<UserData>(
+                                  stream: FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc('user1')
+                                      .snapshots()
+                                      .map(
+                                        (event) => UserData.fromuserdata(
+                                            event.data()!),
+                                      ),
                                   builder: (context, snapshot) {
                                     if (snapshot.hasError) {
                                       return const Text("Error");
@@ -136,14 +184,15 @@ class _HomeState extends State<Home> {
                                       const Text("Error");
                                     } else if (snapshot.hasData) {
                                       final users = snapshot.data;
+                                      waterintakegoal =
+                                          users!.waterintake.toString();
 
                                       return SizedBox(
                                         height: 20,
                                         width: 65,
-                                        child: ListView(
-                                          children: users!
-                                              .map(builduserdata)
-                                              .toList(),
+                                        child: Text(
+                                          users.waterintake.toString(),
+                                          style: const TextStyle(fontSize: 20),
                                         ),
                                       );
                                     }
@@ -166,61 +215,28 @@ class _HomeState extends State<Home> {
                             style: TextStyle(fontSize: 15, color: Colors.black),
                           ),
                           ElevatedButton.icon(
-                              onPressed: () {
-                                builddialoag(
-                                  context,
-                                  child: buildDatePicker(),
-                                  onclicked: () {
-                                    setState(
-                                      () {
-                                        if (lavel >= 0 && lavel <= 1) {
-                                          if (intakelvl == 0) {
-                                            lavel = 250 /
-                                                int.parse(waterintakegoal);
-                                            intakelvl += 250;
-                                            if (kDebugMode) {
-                                              log("lavel : $lavel");
-                                              log("intakelvl : $intakelvl");
-                                              log("intakelvl : $waterintakegoal");
-                                            }
-                                            final data = Reminder(
-                                              watergoal: DateFormat('kk-mm a')
-                                                  .format(_dateTime)
-                                                  .toString(),
-                                              lavelindicator: lavel,
-                                            );
-                                            createdata(data);
-                                          } else if (lavel <= 1.0 &&
-                                              intakelvl > 0) {
-                                            intakelvl += 250;
-                                            lavel = intakelvl /
-                                                int.parse(waterintakegoal);
-                                            if (lavel > 1.0) {
-                                              return;
-                                            }
-                                            if (kDebugMode) {
-                                              log("lavel : $lavel");
-                                              log("intakelvl : $intakelvl");
-                                            }
-                                          } else if (lavel > 1.0) {
-                                            if (kDebugMode) {
-                                              log("lavel : $lavel");
-                                              log("intakelvl : $intakelvl");
-                                            }
-                                            snackbar('Goal Achived', context);
-                                          }
-                                        } else {
-                                          snackbar('Goal Achived', context);
-                                        }
-                                      },
-                                    );
-                                    Navigator.pop(context);
-                                  },
-                                );
-                                FirebaseFirestore.instance
-                                    .collection('lavel')
-                                    .doc('waterlavel')
-                                    .set({'lavel': lavel});
+                              onPressed: () async {
+                                if (kDebugMode) {
+                                  log("level : $level");
+                                  log("waterintakegoal : $waterintakegoal");
+                                  log("percent= $percent");
+                                }
+                                if (double.parse(waterintakegoal) == 1 ||
+                                    (level + 250) <=
+                                        double.parse(waterintakegoal)) {
+                                  setState(
+                                    () {
+                                      level += 250;
+                                      percent =
+                                          level / double.parse(waterintakegoal);
+                                    },
+                                  );
+
+                                  final data = Reminder(watergoal: '$level');
+                                  createdata(data);
+                                } else {
+                                  snackbar("Water level completed", context);
+                                }
                               },
                               icon: const Image(
                                 image: AssetImage('images/glass.png'),
@@ -258,89 +274,124 @@ class _HomeState extends State<Home> {
                   builder: (context,
                       AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
                           snapshot) {
-                    if (snapshot.hasError ||
-                        snapshot.connectionState == ConnectionState.waiting) {
+                    if (snapshot.hasError) {
                       return const Center(
                         child: Text("No Data"),
                       );
                     } else if (snapshot.hasData) {
-                      return ListView.builder(
-                        scrollDirection: Axis.vertical,
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: snapshot.data!.docs.length,
-                        itemBuilder: (context, index) {
-                          DocumentSnapshot ds = snapshot.data!.docs[index];
-                          String watergoaltime = snapshot.data!.docs
-                              .elementAt(index)
-                              .get('watergoal');
-                          return ListTile(
-                            leading: const Icon(
-                              Icons.water_drop,
-                              color: Colors.blueAccent,
-                            ),
-                            title: const Text(
-                              ('250ml'),
-                              style:
-                                  TextStyle(color: Colors.black, fontSize: 16),
-                            ),
-                            subtitle: Text(
-                              watergoaltime,
-                              style: const TextStyle(
-                                  color: Colors.black, fontSize: 16),
-                            ),
-                            trailing: SizedBox(
-                              width: 60,
-                              child: Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
-                                  PopupMenuButton(
-                                    itemBuilder: (BuildContext context) => [
-                                      PopupMenuItem(
-                                        child: TextButton(
-                                          onPressed: () async {
-                                            _delete(ds.id);
-                                            setState(
-                                              () {
-                                                if (lavel < 0.0) {
-                                                  lavel = 0.0;
-                                                  if (intakelvl <= 0) {
-                                                    intakelvl = 0;
-                                                  } else {
-                                                    intakelvl -= 250;
-                                                  }
-                                                } else {
-                                                  if (intakelvl <= 0) {
-                                                    intakelvl = 0;
-                                                    lavel = lavel -
-                                                        (intakelvl / 1000);
-                                                  } else {
-                                                    intakelvl -= 250;
-                                                  }
-                                                }
+                      return Column(children: [
+                        Card(
+                          elevation: 5.0,
+                          child: ListView.builder(
+                            scrollDirection: Axis.vertical,
+                            physics: const NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            itemCount: snapshot.data!.docs.length,
+                            itemBuilder: (context, index) {
+                              DocumentSnapshot ds = snapshot.data!.docs[index];
+                              return ListTile(
+                                leading: const Icon(
+                                  Icons.water_drop,
+                                  color: Colors.blueAccent,
+                                ),
+                                title: const Text(
+                                  ('250ml'),
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 16),
+                                ),
+                                trailing: SizedBox(
+                                  width: 150,
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        ds.id,
+                                        style: const TextStyle(
+                                            color: Colors.black, fontSize: 16),
+                                      ),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      PopupMenuButton(
+                                        itemBuilder: (BuildContext context) => [
+                                          PopupMenuItem(
+                                            child: TextButton(
+                                              onPressed: () async {
+                                                _delete(ds.id);
+
+                                                await FirebaseFirestore.instance
+                                                    .collection('lavel')
+                                                    .doc('waterlavel')
+                                                    .set(
+                                                  {"waterlavel": level - 250},
+                                                );
+                                                setState(() {
+                                                  percent = level /
+                                                      double.parse(
+                                                          waterintakegoal);
+                                                  Navigator.of(context).pop();
+                                                });
                                               },
-                                            );
-                                            //Navigator.of(context).pop();
-                                          },
-                                          child: const Text('Delete'),
-                                        ),
+                                              child: const Text('Delete'),
+                                            ),
+                                          ),
+                                          PopupMenuItem(
+                                            child: TextButton(
+                                              onPressed: () {
+                                                builddialoag(
+                                                  context,
+                                                  child: buildDatePicker(),
+                                                  onclicked: () {
+                                                    FirebaseFirestore.instance
+                                                        .collection('users')
+                                                        .doc('user1')
+                                                        .collection(
+                                                          DateFormat(
+                                                                  'yyyy-MM-dd')
+                                                              .format(
+                                                                  _dateTime),
+                                                        )
+                                                        .doc(ds.id)
+                                                        .delete();
+                                                    final data = Reminder(
+                                                        watergoal: '$level');
+                                                    FirebaseFirestore.instance
+                                                        .collection('users')
+                                                        .doc('user1')
+                                                        .collection(DateFormat(
+                                                                'yyyy-MM-dd')
+                                                            .format(_dateTime))
+                                                        .doc(DateFormat(
+                                                                'kk-mm-ss')
+                                                            .format(
+                                                                _updateteddate))
+                                                        .set(data.toMap())
+                                                        .then(
+                                                      (value) {
+                                                        Fluttertoast.showToast(
+                                                            msg: "Sccuess");
+                                                      },
+                                                    );
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                );
+                                              },
+                                              child: const Text('Edit'),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      );
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 10)
+                      ]);
                     }
                     return const Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.0,
-                        semanticsLabel: 'Loading',
-                      ),
+                      child: CircularProgressIndicator(strokeWidth: 2.0),
                     );
                   },
                 ),
@@ -361,49 +412,71 @@ class _HomeState extends State<Home> {
         )
         .doc(docid)
         .delete();
-
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Deleted...!'),
       ),
     );
-    Navigator.of(context).pop();
   }
 
-  Widget builduserdata(UserData data) => Text(
-        data.waterintake,
-        style: const TextStyle(color: Colors.black, fontSize: 20),
-      );
-
-  Stream<List<UserData>> readusers() =>
-      FirebaseFirestore.instance.collection('users').snapshots().map(
-            (snapshot) => snapshot.docs
-                .map((doc) => UserData.fromuserdata(doc.data()))
-                .toList(),
-          );
-  Future<void> createdata(Reminder data) async {
+  Future<void> update(String docid) async {
     await FirebaseFirestore.instance
         .collection('users')
         .doc('user1')
-        .collection(DateFormat('yyyy-MM-dd').format(_dateTime))
-        .doc(DateFormat('kk-mm').format(_dateTime))
+        .collection(
+          DateFormat('yyyy-MM-dd').format(_dateTime),
+        )
+        .doc(docid)
+        .delete();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Deleted...!'),
+      ),
+    );
+  }
+
+  Stream<WaterLevel> readwaterintakelavel() {
+    final docref = FirebaseFirestore.instance
+        .collection('lavel')
+        .doc('waterlavel')
+        .snapshots();
+    final waterlevelfromdb =
+        docref.map((value) => WaterLevel.getwaterlevel(value.data()!));
+    return waterlevelfromdb;
+  }
+
+  createdata(Reminder data) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc('user1')
+        .collection(DateFormat('yyyy-MM-dd').format(DateTime.now()))
+        .doc(DateFormat('kk-mm-ss').format(DateTime.now()))
         .set(data.toMap())
-        .then((value) {
-      Fluttertoast.showToast(msg: "Sccuess");
-    });
+        .then(
+      (value) {
+        Fluttertoast.showToast(msg: "Sccuess");
+      },
+    );
+    FirebaseFirestore.instance
+        .collection('lavel')
+        .doc('waterlavel')
+        .set({"waterlavel": level});
   }
 
   void builddialoag(BuildContext context,
           {required Widget child, required VoidCallback onclicked}) =>
       showCupertinoModalPopup(
-          context: context,
-          builder: (context) => CupertinoActionSheet(
-                actions: [child],
-                cancelButton: CupertinoActionSheetAction(
-                  onPressed: onclicked,
-                  child: const Text('Save'),
-                ),
-              ));
+        context: context,
+        builder: (context) => CupertinoActionSheet(
+          actions: [child],
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: onclicked,
+            child: const Text('Save'),
+          ),
+        ),
+      );
 
   Widget buildDatePicker() => SizedBox(
         height: 300,
@@ -413,7 +486,7 @@ class _HomeState extends State<Home> {
           maximumYear: DateTime.now().year,
           mode: CupertinoDatePickerMode.time,
           onDateTimeChanged: (dateTime) {
-            _dateTime = dateTime;
+            _updateteddate = dateTime;
           },
         ),
       );
@@ -434,20 +507,6 @@ class _HomeState extends State<Home> {
         ),
       ),
     );
-  }
-
-  String getintake() {
-    CollectionReference collectionReference =
-        FirebaseFirestore.instance.collection('users');
-    collectionReference.doc('user1').get().then(
-      (value) {
-        waterintakegoal = (value)['waterintake'];
-        setState(
-          () {},
-        );
-      },
-    );
-    return waterintakegoal;
   }
 
   // double getlavelindicator() {

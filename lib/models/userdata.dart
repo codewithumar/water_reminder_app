@@ -1,16 +1,16 @@
 class UserData {
-  String weight;
-  String gender;
-  String waketime;
-  String sleeptime;
-  String waterintake;
+  String? weight;
+  String? gender;
+  String? waketime;
+  String? sleeptime;
+  String? waterintake;
 
   UserData({
-    required this.weight,
-    required this.gender,
-    required this.sleeptime,
-    required this.waketime,
-    required this.waterintake,
+    this.weight,
+    this.gender,
+    this.sleeptime,
+    this.waketime,
+    this.waterintake,
   });
 
   Map<String, dynamic> toMap() {

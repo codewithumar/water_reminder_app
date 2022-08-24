@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../screens/gender_onboarding_2.dart';
+import '../OnBoardingScreens/gender_onboarding_2.dart';
 
 class AppButton extends StatelessWidget {
   const AppButton({

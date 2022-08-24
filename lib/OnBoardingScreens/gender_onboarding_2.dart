@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:water_reminder_app/screens/datetime_onboarding3.dart';
+import 'package:water_reminder_app/OnBoardingScreens/datetime_onboarding3.dart';
 
 enum Stringnames { male, female }
 
@@ -48,14 +48,17 @@ class _GenderOnBoardingState extends State<GenderOnBoarding> {
               ListTile(
                 title: const Text('Female'),
                 leading: Radio<String>(
-                    value: 'Female',
-                    groupValue: gender,
-                    onChanged: (value) {
-                      setState(() {
+                  value: 'Female',
+                  groupValue: gender,
+                  onChanged: (value) {
+                    setState(
+                      () {
                         gender = value;
                         genderselcted = value.toString();
-                      });
-                    }),
+                      },
+                    );
+                  },
+                ),
               ),
               const SizedBox(
                 height: 20,
